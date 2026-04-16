@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     try {
         await execute(
             `INSERT INTO devices (device_id, parent_email, last_seen)
-             VALUES (?, ?, NOW())
+             VALUES ($1, $2, NOW())
              ON CONFLICT (device_id) DO UPDATE SET last_seen = NOW()`,
             [deviceId, parentEmail]
         );

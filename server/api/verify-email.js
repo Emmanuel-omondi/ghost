@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
 
     try {
         const [rows] = await execute(
-            'SELECT id, status FROM licenses WHERE parent_email = ?', [email]
+            'SELECT id, status FROM licenses WHERE parent_email = $1', [email]
         );
         const row = rows[0];
         if (!row) return res.json({ valid: false, message: 'Email not registered. Contact admin.' });

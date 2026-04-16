@@ -4,20 +4,19 @@ let pool;
 
 function getPool() {
     if (!pool) {
+        // POSTGRES_URL comes from Vercel's Supabase integration
+        const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
         pool = new Pool({
-            connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+            connectionString,
             ssl: { rejectUnauthorized: false }
         });
     }
     return pool;
 }
 
-// Helper: converts MySQL ? placeholders to PostgreSQL $1, $2...
 async function execute(sql, params = []) {
     const db = getPool();
-    let i = 0;
-    const pgSql = sql.replace(/\?/g, function() { i++; return '$' + i; });
-    const result = await db.query(pgSql, params);
+    const result = await db.query(sql, params);
     return [result.rows];
 }
 

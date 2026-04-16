@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     if (!parentEmail || !deviceId) return res.status(400).json({ error: 'Missing credentials' });
 
     const [chk] = await execute(
-        "SELECT id FROM licenses WHERE parent_email = ? AND status = 'active'", [parentEmail]
+        "SELECT id FROM licenses WHERE parent_email = $1 AND status = 'active'", [parentEmail]
     );
     if (!chk.length) return res.status(403).json({ error: 'Email not registered or inactive' });
 
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
                 const acc = parseFloat(loc.accuracy) || null;
                 if (!isNaN(lat) && !isNaN(lng)) {
                     await execute(
-                        'INSERT INTO locations (device_id, parent_email, lat, lng, accuracy, timestamp) VALUES (?,?,?,?,?,?)',
+                        'INSERT INTO locations (device_id, parent_email, lat, lng, accuracy, timestamp) VALUES ($1,$2,$3,$4,$5,$6)',
                         [deviceId, parentEmail, lat, lng, acc, ts]
                     );
                     inserted++;
@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
                 const direction = ['SENT','RECEIVED'].includes((p.direction||'').toUpperCase()) ? p.direction.toUpperCase() : 'RECEIVED';
                 await execute(
                     `INSERT INTO conversations (device_id, parent_email, app_type, contact_id, contact_name, thread_id, direction, content, media_meta, timestamp)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
                     [deviceId, parentEmail, appType, p.contactId||'', p.contactName||'', p.threadId||null, direction, content, mediaMeta, ts]
                 );
                 inserted++;
@@ -66,8 +66,7 @@ module.exports = async (req, res) => {
 
     try {
         await execute(
-            `INSERT INTO devices (device_id, parent_email, last_seen)
-             VALUES (?, ?, NOW())
+            `INSERT INTO devices (device_id, parent_email, last_seen) VALUES ($1,$2,NOW())
              ON CONFLICT (device_id) DO UPDATE SET last_seen = NOW()`,
             [deviceId, parentEmail]
         );

@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
         const [rows] = await execute(
             `SELECT (expiry_date::date - CURRENT_DATE) as days_remaining,
                     CASE WHEN expiry_date > NOW() AND status='active' THEN 'Active' ELSE 'Expired/Blocked' END as status
-             FROM licenses WHERE parent_email = ?`,
+             FROM licenses WHERE parent_email = $1`,
             [session.parentEmail]
         );
         res.json(rows[0] || { status: 'No License', days_remaining: 0 });

@@ -22,6 +22,7 @@ module.exports = async (req, res) => {
             "SELECT * FROM licenses WHERE parent_email = $1 AND status = 'active'",
             [email.toLowerCase().trim()]
         );
+
         const user = rows[0];
         if (!user || !await bcrypt.compare(password, user.password_hash)) {
             return res.json({ success: false, message: 'Invalid credentials or inactive account' });
