@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "rewrites": [
     { "source": "/api/auth/login",   "destination": "/api/auth/login.js" },
     { "source": "/api/auth/logout",  "destination": "/api/auth/logout.js" },
