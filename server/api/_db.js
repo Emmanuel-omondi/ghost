@@ -4,10 +4,17 @@ let pool;
 
 function getPool() {
     if (!pool) {
-        // Use non-pooling URL — avoids pgbouncer SSL issues
-        const connectionString = process.env.POSTGRES_URL_NON_POOLING
+        let connectionString = process.env.POSTGRES_URL_NON_POOLING
             || process.env.POSTGRES_URL
-            || process.env.DATABASE_URL;
+            || process.env.DATABASE_URL
+            || '';
+
+        // Strip sslmode from URL — we set SSL via the ssl option below
+        connectionString = connectionString
+            .replace(/[?&]sslmode=[^&]*/g, '')
+            .replace(/[?&]pgbouncer=[^&]*/g, '')
+            .replace(/[?&]supa=[^&]*/g, '')
+            .replace(/\?$/, '');
 
         pool = new Pool({
             connectionString,
