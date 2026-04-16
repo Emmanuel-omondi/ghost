@@ -12,13 +12,12 @@ function getPool() {
     return pool;
 }
 
-// Helper: mimics mysql2's execute([sql, params]) returning [rows]
+// Helper: converts MySQL ? placeholders to PostgreSQL $1, $2...
 async function execute(sql, params = []) {
-    const pool = getPool();
-    // Convert MySQL ? placeholders to PostgreSQL $1, $2...
+    const db = getPool();
     let i = 0;
-    const pgSql = sql.replace(/\?/g, () => `$${++i}`);
-    const result = await pool.query(pgSql, params);
+    const pgSql = sql.replace(/\?/g, function() { i++; return '$' + i; });
+    const result = await db.query(pgSql, params);
     return [result.rows];
 }
 
