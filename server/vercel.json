@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/auth/login",   "dest": "/api/auth/login.js" },
-    { "src": "/api/auth/logout",  "dest": "/api/auth/logout.js" },
-    { "src": "/api/auth/check",   "dest": "/api/auth/check.js" },
-    { "src": "/api/verify-email", "dest": "/api/verify-email.js" },
-    { "src": "/api/sync",         "dest": "/api/sync.js" },
-    { "src": "/api/heartbeat",    "dest": "/api/heartbeat.js" },
-    { "src": "/api/license",      "dest": "/api/license.js" },
-    { "src": "/api/data",         "dest": "/api/data.js" },
-    { "src": "/(.*)",             "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/auth/login",   "destination": "/api/auth/login.js" },
+    { "source": "/api/auth/logout",  "destination": "/api/auth/logout.js" },
+    { "source": "/api/auth/check",   "destination": "/api/auth/check.js" },
+    { "source": "/api/verify-email", "destination": "/api/verify-email.js" },
+    { "source": "/api/sync",         "destination": "/api/sync.js" },
+    { "source": "/api/heartbeat",    "destination": "/api/heartbeat.js" },
+    { "source": "/api/license",      "destination": "/api/license.js" },
+    { "source": "/api/data",         "destination": "/api/data.js" },
+    { "source": "/(.*)",             "destination": "/public/$1" }
   ]
 }
