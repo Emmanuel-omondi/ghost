@@ -1,24 +1,27 @@
+const bcrypt  = require('bcryptjs');
+const { execute } = require('./_db');
+
 module.exports = async (req, res) => {
-    const { Pool } = require('pg');
-
-    let connectionString = process.env.POSTGRES_URL_NON_POOLING
-        || process.env.POSTGRES_URL
-        || process.env.DATABASE_URL
-        || '';
-
-    connectionString = connectionString
-        .replace(/[?&]sslmode=[^&]*/g, '')
-        .replace(/[?&]pgbouncer=[^&]*/g, '')
-        .replace(/[?&]supa=[^&]*/g, '')
-        .replace(/\?$/, '');
-
-    const masked = connectionString.replace(/:([^@]+)@/, ':***@');
-
     try {
-        const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
-        await pool.query('SELECT 1');
-        res.json({ status: 'connected', url: masked });
+        // Check what's in licenses table
+        const [rows] = await execute('SELECT parent_email, status, password_hash FROM licenses LIMIT 5');
+        
+        // Test bcrypt with known hash
+        const testHash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniW';
+        const testMatch = await bcrypt.compare('password123', testHash);
+
+        // If there's a user, test their hash too
+        let userMatch = null;
+        if (rows[0]) {
+            userMatch = await bcrypt.compare('password123', rows[0].password_hash);
+        }
+
+        res.json({
+            users: rows.map(r => ({ email: r.parent_email, status: r.status, hash: r.password_hash.substring(0,30) })),
+            testHashWorks: testMatch,
+            userHashMatch: userMatch
+        });
     } catch (e) {
-        res.json({ status: 'error', message: e.message, url: masked });
+        res.json({ error: e.message });
     }
 };
