@@ -1,24 +1,18 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 
 let pool;
 
 function getPool() {
     if (!pool) {
-        let connectionString = process.env.POSTGRES_URL_NON_POOLING
-            || process.env.POSTGRES_URL
-            || process.env.DATABASE_URL
-            || '';
-
-        // Strip sslmode from URL — we set SSL via the ssl option below
-        connectionString = connectionString
-            .replace(/[?&]sslmode=[^&]*/g, '')
-            .replace(/[?&]pgbouncer=[^&]*/g, '')
-            .replace(/[?&]supa=[^&]*/g, '')
-            .replace(/\?$/, '');
-
-        pool = new Pool({
-            connectionString,
-            ssl: { rejectUnauthorized: false }
+        pool = mysql.createPool({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASS || '',
+            database: process.env.DB_NAME || 'ghostmonitor',
+            port: parseInt(process.env.DB_PORT || '3306'),
+            waitForConnections: true,
+            connectionLimit: 10,
+            ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
         });
     }
     return pool;
@@ -26,8 +20,8 @@ function getPool() {
 
 async function execute(sql, params = []) {
     const db = getPool();
-    const result = await db.query(sql, params);
-    return [result.rows];
+    const result = await db.execute(sql, params);
+    return result;
 }
 
 module.exports = { getPool, execute };
