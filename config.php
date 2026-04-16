@@ -1,9 +1,9 @@
 <?php
 session_start();
-define('DB_HOST', 'sql301.infinityfree.com');
-define('DB_USER', 'epiz_33984306');
-define('DB_PASS', '7DNNpLyD9oKdDR');
-define('DB_NAME', 'epiz_33984306_ghost');
+define('DB_HOST', 'sql306.infinityfree.com');
+define('DB_USER', 'if0_41680273');
+define('DB_PASS', 'ZVJ2pq9m7cb');
+define('DB_NAME', 'if0_41680273_ghost');
 
 define('ADMIN_EMAIL', 'admin@ghostmonitor.com');
 define('ADMIN_PASS_HASH', password_hash('admin123', PASSWORD_DEFAULT));
