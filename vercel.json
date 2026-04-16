@@ -5,6 +5,13 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "functions": {
+    "index.js": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "runtime": "nodejs18.x"
+    }
+  },
   "routes": [
     {
       "src": "/sw.js",
