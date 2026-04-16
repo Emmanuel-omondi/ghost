@@ -4,11 +4,10 @@ let pool;
 
 function getPool() {
     if (!pool) {
-        // Vercel Supabase integration provides POSTGRES_URL with ?sslmode=require
-        // We need to strip that and handle SSL manually
-        let connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
-        // Remove sslmode from query string — we handle it via ssl option
-        connectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '').replace(/[?&]pgbouncer=[^&]*/g, '').replace(/[?&]supa=[^&]*/g, '');
+        // Use non-pooling URL — avoids pgbouncer SSL issues
+        const connectionString = process.env.POSTGRES_URL_NON_POOLING
+            || process.env.POSTGRES_URL
+            || process.env.DATABASE_URL;
 
         pool = new Pool({
             connectionString,
