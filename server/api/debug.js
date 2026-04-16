@@ -3,24 +3,19 @@ const { execute } = require('./_db');
 
 module.exports = async (req, res) => {
     try {
-        // Check what's in licenses table
-        const [rows] = await execute('SELECT parent_email, status, password_hash FROM licenses LIMIT 5');
+        // Generate a fresh hash for 'admin123'
+        const newHash = await bcrypt.hash('admin123', 10);
         
-        // Test bcrypt with known hash
-        const testHash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lniW';
-        const testMatch = await bcrypt.compare('password123', testHash);
+        // Update the user's password
+        await execute(
+            "UPDATE licenses SET password_hash = $1 WHERE parent_email = 'admin@ghostmonitor.com'",
+            [newHash]
+        );
 
-        // If there's a user, test their hash too
-        let userMatch = null;
-        if (rows[0]) {
-            userMatch = await bcrypt.compare('password123', rows[0].password_hash);
-        }
+        // Verify it works
+        const match = await bcrypt.compare('admin123', newHash);
 
-        res.json({
-            users: rows.map(r => ({ email: r.parent_email, status: r.status, hash: r.password_hash.substring(0,30) })),
-            testHashWorks: testMatch,
-            userHashMatch: userMatch
-        });
+        res.json({ done: true, match, hint: 'Login with admin123' });
     } catch (e) {
         res.json({ error: e.message });
     }
