@@ -1,21 +1,25 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 
 let pool;
 
 function getPool() {
     if (!pool) {
-        pool = mysql.createPool({
-            host:               process.env.DB_HOST,
-            user:               process.env.DB_USER,
-            password:           process.env.DB_PASS,
-            database:           process.env.DB_NAME,
-            port:               parseInt(process.env.DB_PORT || '3306'),
-            waitForConnections: true,
-            connectionLimit:    5,
-            ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
+        pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false }
         });
     }
     return pool;
 }
 
-module.exports = { getPool };
+// Helper: mimics mysql2's execute([sql, params]) returning [rows]
+async function execute(sql, params = []) {
+    const pool = getPool();
+    // Convert MySQL ? placeholders to PostgreSQL $1, $2...
+    let i = 0;
+    const pgSql = sql.replace(/\?/g, () => `$${++i}`);
+    const result = await pool.query(pgSql, params);
+    return [result.rows];
+}
+
+module.exports = { getPool, execute };

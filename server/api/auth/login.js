@@ -1,5 +1,5 @@
-const bcrypt     = require('bcryptjs');
-const { getPool }    = require('../_db');
+const bcrypt         = require('bcryptjs');
+const { execute }    = require('../_db');
 const { setSession } = require('../_session');
 
 module.exports = async (req, res) => {
@@ -10,8 +10,7 @@ module.exports = async (req, res) => {
     if (!email || !password) return res.json({ success: false, message: 'Missing credentials' });
 
     try {
-        const db = getPool();
-        const [rows] = await db.execute(
+        const [rows] = await execute(
             "SELECT * FROM licenses WHERE parent_email = ? AND status = 'active'",
             [email.toLowerCase().trim()]
         );

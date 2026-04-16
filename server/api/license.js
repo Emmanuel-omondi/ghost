@@ -1,4 +1,4 @@
-const { getPool }    = require('./_db');
+const { execute }    = require('./_db');
 const { getSession } = require('./_session');
 
 module.exports = async (req, res) => {
@@ -6,10 +6,9 @@ module.exports = async (req, res) => {
     if (!session?.parentEmail) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const db = getPool();
-        const [rows] = await db.execute(
-            `SELECT DATEDIFF(expiry_date, NOW()) as days_remaining,
-                    CASE WHEN DATEDIFF(expiry_date, NOW()) > 0 AND status='active' THEN 'Active' ELSE 'Expired/Blocked' END as status
+        const [rows] = await execute(
+            `SELECT (expiry_date::date - CURRENT_DATE) as days_remaining,
+                    CASE WHEN expiry_date > NOW() AND status='active' THEN 'Active' ELSE 'Expired/Blocked' END as status
              FROM licenses WHERE parent_email = ?`,
             [session.parentEmail]
         );

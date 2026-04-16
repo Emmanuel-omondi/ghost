@@ -1,4 +1,4 @@
-const { getPool } = require('./_db');
+const { execute } = require('./_db');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,8 +11,7 @@ module.exports = async (req, res) => {
     if (!email) return res.status(400).json({ valid: false, message: 'Email required' });
 
     try {
-        const db = getPool();
-        const [rows] = await db.execute(
+        const [rows] = await execute(
             'SELECT id, status FROM licenses WHERE parent_email = ?', [email]
         );
         const row = rows[0];

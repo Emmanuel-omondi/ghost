@@ -1,4 +1,4 @@
-const { getPool } = require('./_db');
+const { execute } = require('./_db');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,9 +7,10 @@ module.exports = async (req, res) => {
     if (!parentEmail || !deviceId) return res.status(400).json({ error: 'Missing credentials' });
 
     try {
-        const db = getPool();
-        await db.execute(
-            'INSERT INTO devices (device_id, parent_email, last_seen) VALUES (?,?,NOW()) ON DUPLICATE KEY UPDATE last_seen=NOW()',
+        await execute(
+            `INSERT INTO devices (device_id, parent_email, last_seen)
+             VALUES (?, ?, NOW())
+             ON CONFLICT (device_id) DO UPDATE SET last_seen = NOW()`,
             [deviceId, parentEmail]
         );
         res.json({ ok: true });
