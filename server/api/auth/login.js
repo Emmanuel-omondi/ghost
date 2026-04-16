@@ -4,14 +4,22 @@ const { setSession } = require('../_session');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
     if (req.method !== 'POST') return res.status(405).end();
 
-    const { email, password } = req.body || {};
+    // Parse body — Vercel may pass it as string or object
+    let body = req.body;
+    if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch { body = {}; }
+    }
+    body = body || {};
+
+    const { email, password } = body;
     if (!email || !password) return res.json({ success: false, message: 'Missing credentials' });
 
     try {
         const [rows] = await execute(
-            "SELECT * FROM licenses WHERE parent_email = ? AND status = 'active'",
+            "SELECT * FROM licenses WHERE parent_email = $1 AND status = 'active'",
             [email.toLowerCase().trim()]
         );
         const user = rows[0];
@@ -22,6 +30,6 @@ module.exports = async (req, res) => {
         res.json({ success: true });
     } catch (e) {
         console.error('[login]', e.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: e.message });
     }
 };
