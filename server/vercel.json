@@ -16,7 +16,8 @@
     { "src": "/sys/core/panel/x7k2m",                    "dest": "/public/sys/core/panel/x7k2m/signin.html" },
     { "src": "/sys/core/panel/x7k2m/",                   "dest": "/public/sys/core/panel/x7k2m/signin.html" },
     { "src": "/sys/core/panel/x7k2m/signin(\\.html)?",   "dest": "/public/sys/core/panel/x7k2m/signin.html" },
-    { "src": "/sys/core/panel/x7k2m/dashboard(\\.html)?","dest": "/public/sys/core/panel/x7k2m/dashboard.html" },
+    { "src": "/sys/core/panel/x7k2m/dashboard(\\.html)?","dest": "/public/sys/core/panel/x7k2m/p9x4nz.html" },
+    { "src": "/sys/core/panel/x7k2m/p9x4nz(\\.html)?",  "dest": "/public/sys/core/panel/x7k2m/p9x4nz.html" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
