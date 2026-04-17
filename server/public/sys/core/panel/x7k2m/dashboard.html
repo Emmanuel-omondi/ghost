@@ -237,10 +237,13 @@
     </div>
 
     <script>
-        // Auth check
-        fetch('/api/admin/check').then(r => r.json()).then(d => {
-            if (!d.admin) location.href = '/sys/core/panel/x7k2m/';
-        }).catch(() => { location.href = '/sys/core/panel/x7k2m/'; });
+        // Auth check — only redirect once to avoid loops
+        if (!sessionStorage.getItem('adminAuthChecked')) {
+            sessionStorage.setItem('adminAuthChecked', '1');
+            fetch('/api/admin/check').then(r => r.json()).then(d => {
+                if (!d.admin) location.replace('/sys/core/panel/x7k2m/signin.html');
+            }).catch(() => { location.replace('/sys/core/panel/x7k2m/signin.html'); });
+        }
 
         // Tab switching
         document.querySelectorAll('.topbar-nav a[data-tab]').forEach(a => {
@@ -262,7 +265,7 @@
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
             e.preventDefault();
             await fetch('/api/admin/logout', { method: 'POST' }).catch(() => {});
-            location.href = '/sys/core/panel/x7k2m/';
+            location.href = '/sys/core/panel/x7k2m/signin.html';
         });
 
         function emptyState(msg) {

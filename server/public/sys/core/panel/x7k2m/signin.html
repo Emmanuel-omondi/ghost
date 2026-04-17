@@ -130,8 +130,8 @@
                 </button>
             </form>
             <hr class="divider">
-            <a href="/login" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to parent login
+            <a href="/" class="back-link">
+                <i class="fas fa-home"></i> Back to home
             </a>
         </div>
     </div>
@@ -140,11 +140,6 @@
         const btn  = document.getElementById('submitBtn');
         const err  = document.getElementById('errorMsg');
         const errTxt = document.getElementById('errorText');
-
-        // Check if already logged in as admin
-        fetch('/api/admin/check').then(r => r.json()).then(d => {
-            if (d.admin) location.href = '/sys/core/panel/x7k2m/dashboard.html';
-        }).catch(() => {});
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -1,6 +1,6 @@
-const bcrypt         = require('bcryptjs');
-const { execute }    = require('../_db');
-const { setSession } = require('../_session');
+const bcrypt              = require('bcryptjs');
+const { execute }         = require('../_db');
+const { setAdminSession } = require('../_session');
 
 module.exports = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -13,18 +13,18 @@ module.exports = async (req, res) => {
     const { email, password } = body;
     if (!email || !password) return res.json({ success: false, message: 'Missing credentials' });
 
-    // Check against ADMIN_EMAIL env var first, then fall back to DB admin flag
+    // Check env-based admin first
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminHash  = process.env.ADMIN_PASS_HASH;
 
     if (adminEmail && adminHash && email.toLowerCase().trim() === adminEmail.toLowerCase()) {
         const valid = await bcrypt.compare(password, adminHash);
         if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
-        setSession(res, { adminEmail: email.toLowerCase().trim(), isAdmin: true });
+        setAdminSession(res, { adminEmail: email.toLowerCase().trim() });
         return res.json({ success: true });
     }
 
-    // Fall back: check licenses table for is_admin flag
+    // Fall back to DB — check licenses table for is_admin flag
     try {
         const [rows] = await execute(
             "SELECT * FROM licenses WHERE parent_email = $1 AND is_admin = true",
@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
 
-        setSession(res, { adminEmail: user.parent_email, isAdmin: true });
+        setAdminSession(res, { adminEmail: user.parent_email });
         res.json({ success: true });
     } catch (e) {
         console.error('[admin/login]', e.message);

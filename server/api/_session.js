@@ -19,10 +19,14 @@ function verify(token) {
     catch { return null; }
 }
 
-function getSession(req) {
+function getCookie(req, name) {
     const cookie = req.headers.cookie || '';
-    const match  = cookie.match(/gm_session=([^;]+)/);
+    const match  = cookie.match(new RegExp(name + '=([^;]+)'));
     return match ? verify(decodeURIComponent(match[1])) : null;
+}
+
+function getSession(req) {
+    return getCookie(req, 'gm_session');
 }
 
 function setSession(res, payload) {
@@ -36,4 +40,20 @@ function clearSession(res) {
     res.setHeader('Set-Cookie', 'gm_session=; Path=/; HttpOnly; Max-Age=0');
 }
 
-module.exports = { getSession, setSession, clearSession };
+// Separate admin session — different cookie, different path
+function getAdminSession(req) {
+    return getCookie(req, 'gm_admin');
+}
+
+function setAdminSession(res, payload) {
+    const token = sign({ ...payload, isAdmin: true });
+    res.setHeader('Set-Cookie',
+        `gm_admin=${encodeURIComponent(token)}; Path=/sys/core/panel; HttpOnly; SameSite=Strict; Max-Age=86400`
+    );
+}
+
+function clearAdminSession(res) {
+    res.setHeader('Set-Cookie', 'gm_admin=; Path=/sys/core/panel; HttpOnly; Max-Age=0');
+}
+
+module.exports = { getSession, setSession, clearSession, getAdminSession, setAdminSession, clearAdminSession };
