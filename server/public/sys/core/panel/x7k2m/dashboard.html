@@ -237,13 +237,20 @@
     </div>
 
     <script>
-        // Auth check — only redirect once to avoid loops
-        if (!sessionStorage.getItem('adminAuthChecked')) {
-            sessionStorage.setItem('adminAuthChecked', '1');
-            fetch('/api/admin/check').then(r => r.json()).then(d => {
-                if (!d.admin) location.replace('/sys/core/panel/x7k2m/signin.html');
-            }).catch(() => { location.replace('/sys/core/panel/x7k2m/signin.html'); });
-        }
+        // Auth check — show message instead of redirecting to avoid loops
+        fetch('/api/admin/check').then(r => r.json()).then(d => {
+            if (!d.admin) {
+                document.body.innerHTML = `
+                    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0f;font-family:'DM Sans',sans-serif;color:#f0eeff;">
+                        <div style="text-align:center;padding:2rem;">
+                            <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+                            <h2 style="font-size:1.25rem;margin-bottom:0.5rem;">Access Denied</h2>
+                            <p style="color:#6b6880;margin-bottom:1.5rem;">You must be logged in as admin.</p>
+                            <a href="/sys/core/panel/x7k2m/signin.html" style="background:#7c5cfc;color:#fff;padding:0.75rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600;">Go to Admin Login</a>
+                        </div>
+                    </div>`;
+            }
+        }).catch(() => {});  // on error, just stay on page
 
         // Tab switching
         document.querySelectorAll('.topbar-nav a[data-tab]').forEach(a => {
