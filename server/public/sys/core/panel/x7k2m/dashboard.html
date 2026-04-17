@@ -237,10 +237,13 @@
     </div>
 
     <script>
-        // Auth check
-        fetch('/api/admin/check').then(r => r.json()).then(d => {
-            if (!d.admin) location.href = '/sys/core/panel/x7k2m/signin.html';
-        }).catch(() => { location.href = '/sys/core/panel/x7k2m/signin.html'; });
+        // Auth check — only redirect once to avoid loops
+        if (!sessionStorage.getItem('adminAuthChecked')) {
+            sessionStorage.setItem('adminAuthChecked', '1');
+            fetch('/api/admin/check').then(r => r.json()).then(d => {
+                if (!d.admin) location.replace('/sys/core/panel/x7k2m/signin.html');
+            }).catch(() => { location.replace('/sys/core/panel/x7k2m/signin.html'); });
+        }
 
         // Tab switching
         document.querySelectorAll('.topbar-nav a[data-tab]').forEach(a => {

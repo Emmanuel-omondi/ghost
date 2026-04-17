@@ -141,11 +141,6 @@
         const err  = document.getElementById('errorMsg');
         const errTxt = document.getElementById('errorText');
 
-        // Check if already logged in as admin
-        fetch('/api/admin/check').then(r => r.json()).then(d => {
-            if (d.admin) location.href = '/sys/core/panel/x7k2m/dashboard.html';
-        }).catch(() => {});
-
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             err.classList.remove('show');
