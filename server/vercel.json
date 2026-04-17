@@ -13,9 +13,11 @@
     { "src": "/api/heartbeat",     "dest": "/api/heartbeat.js" },
     { "src": "/api/license",       "dest": "/api/license.js" },
     { "src": "/api/data",          "dest": "/api/data.js" },
-    { "src": "/sys/core/panel/x7k2m/?", "dest": "/public/sys/core/panel/x7k2m/signin.html" },
-    { "src": "/sys/core/panel/x7k2m/signin(.html)?", "dest": "/public/sys/core/panel/x7k2m/signin.html" },
-    { "src": "/sys/core/panel/x7k2m/dashboard(.html)?", "dest": "/public/sys/core/panel/x7k2m/dashboard.html" },
+    { "src": "/sys/core/panel/x7k2m",                    "dest": "/public/sys/core/panel/x7k2m/signin.html" },
+    { "src": "/sys/core/panel/x7k2m/",                   "dest": "/public/sys/core/panel/x7k2m/signin.html" },
+    { "src": "/sys/core/panel/x7k2m/index\\.html",       "dest": "/public/sys/core/panel/x7k2m/signin.html" },
+    { "src": "/sys/core/panel/x7k2m/signin(\\.html)?",   "dest": "/public/sys/core/panel/x7k2m/signin.html" },
+    { "src": "/sys/core/panel/x7k2m/dashboard(\\.html)?","dest": "/public/sys/core/panel/x7k2m/dashboard.html" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
