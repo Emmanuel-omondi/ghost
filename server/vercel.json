@@ -1,15 +1,20 @@
 {
   "version": 2,
   "framework": null,
-  "rewrites": [
-    { "source": "/api/auth/login",   "destination": "/api/auth/login.js" },
-    { "source": "/api/auth/logout",  "destination": "/api/auth/logout.js" },
-    { "source": "/api/auth/check",   "destination": "/api/auth/check.js" },
-    { "source": "/api/verify-email", "destination": "/api/verify-email.js" },
-    { "source": "/api/sync",         "destination": "/api/sync.js" },
-    { "source": "/api/heartbeat",    "destination": "/api/heartbeat.js" },
-    { "source": "/api/license",      "destination": "/api/license.js" },
-    { "source": "/api/data",         "destination": "/api/data.js" },
-    { "source": "/(.*)",             "destination": "/public/$1" }
+  "routes": [
+    { "src": "/api/admin/login",   "dest": "/api/admin/login.js" },
+    { "src": "/api/admin/logout",  "dest": "/api/admin/logout.js" },
+    { "src": "/api/admin/check",   "dest": "/api/admin/check.js" },
+    { "src": "/api/auth/login",    "dest": "/api/auth/login.js" },
+    { "src": "/api/auth/logout",   "dest": "/api/auth/logout.js" },
+    { "src": "/api/auth/check",    "dest": "/api/auth/check.js" },
+    { "src": "/api/verify-email",  "dest": "/api/verify-email.js" },
+    { "src": "/api/sync",          "dest": "/api/sync.js" },
+    { "src": "/api/heartbeat",     "dest": "/api/heartbeat.js" },
+    { "src": "/api/license",       "dest": "/api/license.js" },
+    { "src": "/api/data",          "dest": "/api/data.js" },
+    { "src": "/sys/core/panel/x7k2m/?", "dest": "/public/sys/core/panel/x7k2m/index.html" },
+    { "src": "/sys/core/panel/x7k2m/dashboard(.html)?", "dest": "/public/sys/core/panel/x7k2m/dashboard.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
