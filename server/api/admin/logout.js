@@ -1,4 +1,7 @@
+const { clearSession } = require('../_session');
+
 module.exports = (req, res) => {
-    res.setHeader('Set-Cookie', 'admin_token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
+    res.setHeader('Content-Type', 'application/json');
+    clearSession(res);
     res.json({ success: true });
 };

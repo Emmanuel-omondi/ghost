@@ -1,30 +1,45 @@
-const { createClient } = require('@supabase/supabase-js');
-const bcrypt = require('bcryptjs');
+const bcrypt         = require('bcryptjs');
+const { execute }    = require('../_db');
+const { setSession } = require('../_session');
 
 module.exports = async (req, res) => {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    res.setHeader('Content-Type', 'application/json');
+    if (req.method !== 'POST') return res.status(405).end();
 
-    const { email, password } = req.body || {};
-    if (!email || !password) return res.status(400).json({ success: false, message: 'Missing credentials' });
+    let body = req.body;
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
+    body = body || {};
 
+    const { email, password } = body;
+    if (!email || !password) return res.json({ success: false, message: 'Missing credentials' });
+
+    // Check against ADMIN_EMAIL env var first, then fall back to DB admin flag
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminHash  = process.env.ADMIN_PASS_HASH;
 
-    if (!adminEmail || !adminHash) {
-        return res.status(500).json({ success: false, message: 'Admin not configured' });
+    if (adminEmail && adminHash && email.toLowerCase().trim() === adminEmail.toLowerCase()) {
+        const valid = await bcrypt.compare(password, adminHash);
+        if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
+        setSession(res, { adminEmail: email.toLowerCase().trim(), isAdmin: true });
+        return res.json({ success: true });
     }
 
-    if (email.toLowerCase().trim() !== adminEmail.toLowerCase()) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
-    }
+    // Fall back: check licenses table for is_admin flag
+    try {
+        const [rows] = await execute(
+            "SELECT * FROM licenses WHERE parent_email = $1 AND is_admin = true",
+            [email.toLowerCase().trim()]
+        );
+        const user = rows && rows[0];
+        if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
 
-    const valid = await bcrypt.compare(password, adminHash);
-    if (!valid) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
-    }
+        const valid = await bcrypt.compare(password, user.password_hash);
+        if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials. Access denied.' });
 
-    // Set admin session cookie (signed token)
-    const token = Buffer.from(`${adminEmail}:${Date.now()}`).toString('base64');
-    res.setHeader('Set-Cookie', `admin_token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`);
-    res.json({ success: true });
+        setSession(res, { adminEmail: user.parent_email, isAdmin: true });
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[admin/login]', e.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 };

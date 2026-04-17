@@ -13,7 +13,9 @@
     { "source": "/api/heartbeat",    "destination": "/api/heartbeat.js" },
     { "source": "/api/license",      "destination": "/api/license.js" },
     { "source": "/api/data",         "destination": "/api/data.js" },
-    { "source": "/sys/core/panel/x7k2m", "destination": "/public/sys/core/panel/x7k2m/index.html" },
+    { "source": "/sys/core/panel/x7k2m",  "destination": "/public/sys/core/panel/x7k2m/index.html" },
+    { "source": "/sys/core/panel/x7k2m/", "destination": "/public/sys/core/panel/x7k2m/index.html" },
+    { "source": "/sys/core/panel/x7k2m/dashboard", "destination": "/public/sys/core/panel/x7k2m/dashboard.html" },
     { "source": "/(.*)",             "destination": "/public/$1" }
   ]
 }
