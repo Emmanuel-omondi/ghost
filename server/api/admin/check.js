@@ -1,7 +1,7 @@
-const { getSession } = require('../_session');
+const { getAdminSession } = require('../_session');
 
 module.exports = (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    const session = getSession(req);
+    const session = getAdminSession(req);
     res.json({ admin: !!(session && session.isAdmin) });
 };

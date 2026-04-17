@@ -1,7 +1,7 @@
-const { clearSession } = require('../_session');
+const { clearAdminSession } = require('../_session');
 
 module.exports = (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    clearSession(res);
+    clearAdminSession(res);
     res.json({ success: true });
 };
