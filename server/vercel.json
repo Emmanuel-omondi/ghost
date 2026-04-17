@@ -2,6 +2,9 @@
   "version": 2,
   "framework": null,
   "rewrites": [
+    { "source": "/api/admin/login",  "destination": "/api/admin/login.js" },
+    { "source": "/api/admin/logout", "destination": "/api/admin/logout.js" },
+    { "source": "/api/admin/check",  "destination": "/api/admin/check.js" },
     { "source": "/api/auth/login",   "destination": "/api/auth/login.js" },
     { "source": "/api/auth/logout",  "destination": "/api/auth/logout.js" },
     { "source": "/api/auth/check",   "destination": "/api/auth/check.js" },
