@@ -8,6 +8,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Check if there are any unpushed commits on main. If yes: 1) push to origin main using token TOKEN_REMOVED embedded in the remote URL https://TOKEN_REMOVED@github.com/manusiele/ghost.git, 2) then try to create a PR from manusiele:main to Emmanuel-omondi/ghost main via GitHub API. If a PR already exists, skip silently."
+    "prompt": "Check if there are any unpushed commits on main. If yes: 1) push to origin main (auth is in the remote URL), 2) then try to create a PR from manusiele:main to Emmanuel-omondi/ghost main via GitHub API using the token from git remote get-url origin. If a PR already exists, skip silently."
   }
 }
