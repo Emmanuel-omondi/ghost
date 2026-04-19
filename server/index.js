@@ -48,13 +48,14 @@ app.set('views', path.join(__dirname, 'views'));
 const userRoutes = require('./routes/user');
 app.use('/dashboard', userRoutes);
 
+// ── ADMIN FEATURES FROZEN ─────────────────────────────────────────────────
 // Admin Dashboard Routes (obfuscated path for security)
-const dashboardRoutes = require('./routes/dashboard');
-app.use('/sys/core/panel', dashboardRoutes);
+// const dashboardRoutes = require('./routes/dashboard');
+// app.use('/sys/core/panel', dashboardRoutes);
 
 // Admin API Routes
-const adminRoutes = require('./api/admin-routes');
-app.use('/api/admin', adminRoutes);
+// const adminRoutes = require('./api/admin-routes');
+// app.use('/api/admin', adminRoutes);
 
 // ── Authentication Routes ──────────────────────────────────────────────────
 
@@ -66,38 +67,31 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-// Admin Login API
-app.post('/api/admin/login', async (req, res) => {
-    const { username, password, token } = req.body;
-    
-    // Check if token is provided and valid
-    if (token) {
-        const validTokens = (process.env.ADMIN_TOKENS || '').split(',').map(t => t.trim());
-        if (validTokens.includes(token)) {
-            req.session.isAdmin = true;
-            req.session.adminUser = username || 'admin';
-            return res.json({ success: true, redirect: '/sys/core/panel' });
-        }
-    }
-    
-    // Check username/password (you can add more sophisticated auth here)
-    const adminUser = process.env.ADMIN_USER || 'admin';
-    const adminPass = process.env.ADMIN_PASS || 'admin123';
-    
-    if (username === adminUser && password === adminPass) {
-        req.session.isAdmin = true;
-        req.session.adminUser = username;
-        return res.json({ success: true, redirect: '/sys/core/panel' });
-    }
-    
-    res.json({ success: false, message: 'Invalid credentials' });
-});
+// ── ADMIN LOGIN & LOGOUT FROZEN ───────────────────────────────────────────
+// app.post('/api/admin/login', async (req, res) => {
+//     const { username, password, token } = req.body;
+//     if (token) {
+//         const validTokens = (process.env.ADMIN_TOKENS || '').split(',').map(t => t.trim());
+//         if (validTokens.includes(token)) {
+//             req.session.isAdmin = true;
+//             req.session.adminUser = username || 'admin';
+//             return res.json({ success: true, redirect: '/sys/core/panel' });
+//         }
+//     }
+//     const adminUser = process.env.ADMIN_USER || 'admin';
+//     const adminPass = process.env.ADMIN_PASS || 'admin123';
+//     if (username === adminUser && password === adminPass) {
+//         req.session.isAdmin = true;
+//         req.session.adminUser = username;
+//         return res.json({ success: true, redirect: '/sys/core/panel' });
+//     }
+//     res.json({ success: false, message: 'Invalid credentials' });
+// });
 
-// Admin Logout
-app.get('/api/admin/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/sys/core/panel/x7k2m/signin.html');
-});
+// app.get('/api/admin/logout', (req, res) => {
+//     req.session.destroy();
+//     res.redirect('/sys/core/panel/x7k2m/signin.html');
+// });
 
 // User Login API
 app.post('/api/auth/login', async (req, res) => {
