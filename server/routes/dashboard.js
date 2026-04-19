@@ -2,21 +2,33 @@ const express = require('express');
 const router = express.Router();
 const { execute } = require('../api/_db');
 
-// Middleware to check authentication
-const requireAuth = (req, res, next) => {
-    if (!req.session?.parentEmail && !req.headers['x-admin-token']) {
-        return res.status(401).json({ error: 'Unauthorized' });
+// Middleware to check admin authentication
+const requireAdminAuth = (req, res, next) => {
+    const adminToken = req.headers['x-admin-token'] || req.query.token;
+    const validTokens = (process.env.ADMIN_TOKENS || '').split(',').map(t => t.trim());
+    
+    // Check if admin token is valid
+    if (adminToken && validTokens.includes(adminToken)) {
+        req.isAdmin = true;
+        return next();
     }
-    next();
+    
+    // Check if admin session exists
+    if (req.session?.isAdmin) {
+        return next();
+    }
+    
+    // Redirect to admin login if not authenticated
+    return res.redirect('/sys/core/panel/x7k2m/signin.html');
 };
 
-// Dashboard page
-router.get('/', requireAuth, (req, res) => {
+// Admin Dashboard page
+router.get('/', requireAdminAuth, (req, res) => {
     res.render('dashboard');
 });
 
 // API: Overview stats
-router.get('/api/admin/overview', requireAuth, async (req, res) => {
+router.get('/api/admin/overview', requireAdminAuth, async (req, res) => {
     try {
         const [packets] = await execute(`
             SELECT COUNT(*) as total FROM packets
@@ -63,7 +75,7 @@ router.get('/api/admin/overview', requireAuth, async (req, res) => {
 });
 
 // API: Metrics
-router.get('/api/admin/metrics', requireAuth, async (req, res) => {
+router.get('/api/admin/metrics', requireAdminAuth, async (req, res) => {
     try {
         const [packetsByApp] = await execute(`
             SELECT app_type, COUNT(*) as count
@@ -101,7 +113,7 @@ router.get('/api/admin/metrics', requireAuth, async (req, res) => {
 });
 
 // API: Logs
-router.get('/api/admin/logs', requireAuth, async (req, res) => {
+router.get('/api/admin/logs', requireAdminAuth, async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
         const offset = parseInt(req.query.offset) || 0;
@@ -135,7 +147,7 @@ router.get('/api/admin/logs', requireAuth, async (req, res) => {
 });
 
 // API: Users
-router.get('/api/admin/users', requireAuth, async (req, res) => {
+router.get('/api/admin/users', requireAdminAuth, async (req, res) => {
     try {
         const [users] = await execute(`
             SELECT 
@@ -159,7 +171,7 @@ router.get('/api/admin/users', requireAuth, async (req, res) => {
 });
 
 // API: System Health
-router.get('/api/admin/health', requireAuth, async (req, res) => {
+router.get('/api/admin/health', requireAdminAuth, async (req, res) => {
     try {
         const [health] = await execute(`
             SELECT 
@@ -188,7 +200,7 @@ router.get('/api/admin/health', requireAuth, async (req, res) => {
 });
 
 // API: Export data
-router.get('/api/admin/export', requireAuth, async (req, res) => {
+router.get('/api/admin/export', requireAdminAuth, async (req, res) => {
     try {
         const format = req.query.format || 'json';
         const [data] = await execute(`

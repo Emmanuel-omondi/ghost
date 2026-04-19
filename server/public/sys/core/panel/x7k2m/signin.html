@@ -150,13 +150,13 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        email: document.getElementById('adminEmail').value,
+                        username: document.getElementById('adminEmail').value,
                         password: document.getElementById('adminPass').value
                     })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    location.href = '/sys/core/panel/x7k2m/p9x4nz.html';
+                    location.href = data.redirect || '/sys/core/panel';
                 } else {
                     errTxt.textContent = data.message || 'Invalid credentials. Access denied.';
                     err.classList.add('show');

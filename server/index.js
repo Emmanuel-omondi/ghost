@@ -44,13 +44,13 @@ app.set('views', path.join(__dirname, 'views'));
 
 // ── Routes ─────────────────────────────────────────────────────────────────
 
-// User Dashboard Routes
+// User Dashboard Routes (for regular users)
 const userRoutes = require('./routes/user');
 app.use('/dashboard', userRoutes);
 
-// Dashboard API Routes
+// Admin Dashboard Routes (obfuscated path for security)
 const dashboardRoutes = require('./routes/dashboard');
-app.use('/dashboard', dashboardRoutes);
+app.use('/sys/core/panel', dashboardRoutes);
 
 // Admin API Routes
 const adminRoutes = require('./api/admin-routes');
@@ -58,7 +58,7 @@ app.use('/api/admin', adminRoutes);
 
 // ── Authentication Routes ──────────────────────────────────────────────────
 
-// Login Page
+// User Login Page
 app.get('/login', (req, res) => {
     if (req.session?.parentEmail) {
         return res.redirect('/dashboard');
@@ -66,7 +66,40 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-// Login API
+// Admin Login API
+app.post('/api/admin/login', async (req, res) => {
+    const { username, password, token } = req.body;
+    
+    // Check if token is provided and valid
+    if (token) {
+        const validTokens = (process.env.ADMIN_TOKENS || '').split(',').map(t => t.trim());
+        if (validTokens.includes(token)) {
+            req.session.isAdmin = true;
+            req.session.adminUser = username || 'admin';
+            return res.json({ success: true, redirect: '/sys/core/panel' });
+        }
+    }
+    
+    // Check username/password (you can add more sophisticated auth here)
+    const adminUser = process.env.ADMIN_USER || 'admin';
+    const adminPass = process.env.ADMIN_PASS || 'admin123';
+    
+    if (username === adminUser && password === adminPass) {
+        req.session.isAdmin = true;
+        req.session.adminUser = username;
+        return res.json({ success: true, redirect: '/sys/core/panel' });
+    }
+    
+    res.json({ success: false, message: 'Invalid credentials' });
+});
+
+// Admin Logout
+app.get('/api/admin/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/sys/core/panel/x7k2m/signin.html');
+});
+
+// User Login API
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -261,13 +294,9 @@ app.get('/api/heartbeat', async (req, res) => {
 
 // ── Root Routes ────────────────────────────────────────────────────────────
 
-// Redirect root to dashboard
+// Redirect root to deployed frontend
 app.get('/', (req, res) => {
-    if (req.session?.parentEmail) {
-        res.redirect('/dashboard');
-    } else {
-        res.redirect('/login');
-    }
+    res.redirect('https://ghost-seven-indol.vercel.app');
 });
 
 // Service Worker
